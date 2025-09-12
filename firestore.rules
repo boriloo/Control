@@ -8,7 +8,5 @@ match /users/{userId} {
   allow read, update, delete: if request.auth != null && request.auth.uid == userId;
 }
 
-// Qualquer outra coleção que não seja "users" continuará bloqueada
-// até que você adicione regras específicas para ela aqui.
 }
 }
