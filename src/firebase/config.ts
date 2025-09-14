@@ -20,6 +20,8 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
 
+// PARA USAR EMULADORES AO INVÉS DO AR
+
 // if (import.meta.env.DEV) {
 //     try {
 //         console.log("Modo de desenvolvimento. Conectando aos emuladores do Firebase...");

@@ -20,3 +20,12 @@ input:-webkit-autofill:active {
   box-shadow: 0 0 10px #0051ff7d !important;
 
 }
+
+.desktop-area::-webkit-scrollbar {
+  display: none;
+}
+
+.desktop-area {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
