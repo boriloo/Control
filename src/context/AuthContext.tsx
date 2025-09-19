@@ -16,6 +16,8 @@ import { getDesktopsByOwner } from "../services/desktop";
 interface UserContextProps {
     isAuthenticated: boolean;
     user: UserProfile | null;
+    currentDesktop: any;
+    setCurrentDesktop: (desktop: any) => void;
     authLoginUser: (email: string, password: string, rememberMe: boolean) => Promise<void>;
     authRegisterUser: (name: string, email: string, password: string, rememberMe: boolean) => Promise<void>;
     authLogoutUser: () => Promise<void>;
@@ -29,9 +31,11 @@ const UserContext = createContext<UserContextProps | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
     const { app } = useAppContext();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+    const [currentDesktop, setCurrentDesktop] = useState<any>(false);
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [hasDesktops, setHasDesktops] = useState<boolean>(false);
+
 
     async function authLoginUser(email: string, password: string, rememberMe: boolean) {
         try {
@@ -58,7 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             await setPersistence(auth, persistenceType);
 
-            const userProfile: UserProfile = await registerUser({ name, email, password });
+            const user: UserProfile = await registerUser({ name, email, password });
+            const userProfile = await getUserProfile(user.uid as string)
             setUser(userProfile);
 
         } catch (err) {
@@ -72,6 +77,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             signOut(auth)
             setIsAuthenticated(false)
             setUser(null)
+            setHasDesktops(false)
+            setCurrentDesktop(null)
         } catch (err) {
             throw err;
         }
@@ -79,11 +86,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (!user) return;
+            if (!user) {
+                console.log('SEM USER')
+                return;
+            };
             setIsAuthenticated(true);
             try {
                 const desktops = await getDesktopsByOwner(user.uid as string);
-                setHasDesktops(desktops.length > 0);
+                if (desktops.length === 0) return;
+                setHasDesktops(true);
+                setCurrentDesktop(desktops[0])
             } catch (err) {
                 alert(err)
             }
@@ -104,6 +116,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             value={{
                 isAuthenticated,
                 user,
+                currentDesktop,
+                setCurrentDesktop,
                 authLoginUser,
                 authRegisterUser,
                 isLoading,

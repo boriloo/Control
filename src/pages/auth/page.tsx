@@ -39,7 +39,7 @@ const registerSchema = z.object({
 type FormData = z.infer<typeof loginSchema> | z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-    const { authLoginUser, authRegisterUser } = useUser();
+    const { authLoginUser, authRegisterUser, user } = useUser();
     const navigate = useNavigate();
     const [rememberMe, setRememberMe] = useState<boolean>(false);
     const [seePass, setSeePass] = useState<boolean>(false);

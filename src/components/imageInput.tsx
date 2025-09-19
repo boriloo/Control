@@ -18,6 +18,8 @@ export function ClickableImageInput({ onFileSelected, currentImageUrl }: Clickab
         }
     }, [onFileSelected]);
 
+
+
     const { getRootProps, getInputProps } = useDropzone({
         onDrop,
         accept: {
@@ -39,13 +41,15 @@ export function ClickableImageInput({ onFileSelected, currentImageUrl }: Clickab
     return (
         <div
             {...getRootProps()}
-            className="relative rounded-sm  overflow-hidden cursor-pointer group bg-zinc-700 border-2 transition p-2 px-4 border-zinc-500 hover:bg-zinc-800"
+            className={`${preview ? 'min-h-[168px]' : 'p-2 px-4'} relative rounded-sm overflow-hidden cursor-pointer group bg-zinc-700 border-2 transition  border-zinc-500 w-full max-w-[300px] hover:bg-zinc-800`}
         >
             <input {...getInputProps()} />
-
             {preview ? (
                 <>
-                    <img src={preview} alt="Pré-visualização" className="group relative w-full max-w-[200px] h-full object-cover" />
+                    <div className='w-full h-full bg-cover bg-center' style={{ backgroundImage: `url(${preview})` }}>
+
+                    </div>
+
                     <div className="absolute top-0 left-0 z-10 w-full h-full flex justify-center items-center font-medium text-lg transition-all 
                     opacity-0 bg-black/50 group-hover:opacity-100 backdrop-blur-sm object-cover">
                         Escolher outra imagem

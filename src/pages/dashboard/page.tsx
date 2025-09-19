@@ -50,14 +50,15 @@ const findNextAvailablePosition = (icons: IconData[], containerWidth: number): {
 
 export default function DashboardPage() {
     const { root } = useRootContext();
-    const { user, hasDesktops, setHasDesktops } = useUser();
+    const { user, hasDesktops, setHasDesktops, currentDesktop, authLogoutUser } = useUser();
     const { newFile } = useWindowContext();
-
+    console.log(currentDesktop)
     const [start, setStart] = useState<boolean>(false);
 
     useEffect(() => {
+        if (!hasDesktops) return;
         setTimeout(() => { setStart(true) }, 100);
-    }, []);
+    }, [hasDesktops]);
 
     const [icons, setIcons] = useState<IconData[]>(initialIcons);
     const desktopRef = useRef<HTMLDivElement>(null);
@@ -160,14 +161,14 @@ export default function DashboardPage() {
     }, [icons, checkOverflow]);
 
 
-
     return (
         <>
             <div className="pointer-events-none fixed z-50 flex justify-center items-center w-full min-h-screen">
                 <p className={`${start ? 'opacity-0' : 'opacity-100'} control-text text-[50px] transition-all duration-500`}>Control</p>
             </div>
-            <div className={`${start ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 scale-101 flex min-h-screen w-full fixed 
-                bg-black bg-[url('/assets/images/cpcar.jpg')] bg-cover bg-center z-[-1]`}></div>
+            {hasDesktops && (<div className={`${start ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 scale-101 flex min-h-screen w-full fixed 
+                bg-black bg-cover bg-center z-[-1]`}
+                style={{ backgroundImage: `url(${currentDesktop.background})` }}></div>)}
             {/* <div className="fixed top-0 w-full min-h-screen backdrop-blur-[2px] z-10 flex justify-center items-center p-4">
                 <div className="bg-zinc-600 w-[600px] h-[500px]"></div>
 
@@ -196,11 +197,11 @@ export default function DashboardPage() {
                             placeholder="Pesquisar..."
                         />
                     </div>
-                    <div className="flex flex-row items-center justify-between gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
+                    {hasDesktops && (<div className="flex flex-row items-center justify-between gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
                 border-white hover:text-blue-500 hover:border-blue-500 transition-all w-full max-w-50">
-                        <p className="text-lg truncate">Desktop (Pessoal)</p>
+                        <p className="text-lg truncate">{currentDesktop.name} (Pessoal)</p>
                         <GripVertical />
-                    </div>
+                    </div>)}
                 </div>
 
                 <ArrowLeftToLine onClick={

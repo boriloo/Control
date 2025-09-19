@@ -11,7 +11,7 @@ interface PersonalProps {
 
 
 export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
-    const { user } = useUser();
+    const { user, setCurrentDesktop } = useUser();
     const [imageSelected, setImageSelected] = useState<File>()
     const [desktopName, setDesktopName] = useState<string | null>()
     const [loading, setLoading] = useState<boolean>(false)
@@ -21,9 +21,11 @@ export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
 
     const handleSubmit = async () => {
         try {
+            console.log(user)
             setLoading(true)
             if (!imageSelected || !user || !desktopName) return;
             const newDesktop = await createDesktop({ name: desktopName, type: 'personal', ownerId: user.uid as string, members: [user.uid as string] })
+
             setPercentage(prev => (prev + 16.66))
 
             const storage = getStorage();
@@ -40,7 +42,8 @@ export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
 
             console.log('ESSE É O DOWNLOAD: ', downloadURL)
 
-            updateDesktopBackground(newDesktop.id, downloadURL)
+            const updatedDesktop = await updateDesktopBackground(newDesktop.id, downloadURL)
+            setCurrentDesktop(updatedDesktop)
             setPercentage(prev => (prev + 18.66))
             setTimeout(() => {
                 setDone(true)
@@ -86,8 +89,8 @@ export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
                         <input type="text" onChange={(e) => setDesktopName(e.target.value)} className="outline-none transition-all text-lg hover:bg-zinc-800 border-b-1 
                     cursor-pointer focus:cursor-text p-1 px-2 rounded-t-sm focus:border-blue-500 focus:text-blue-100 border-white/50 w-full max-w-[500px]" />
                     </div>
-                    <div className="flex flex-col gap-2">
-                        <p className="text-lg">Imagem de fundo</p>
+                    <div className="flex flex-col gap-2 w-full">
+                        <p className="text-lg">Tela de fundo</p>
                         <ClickableImageInput onFileSelected={(file) => {
                             setImageSelected(file)
                             console.log(imageSelected)

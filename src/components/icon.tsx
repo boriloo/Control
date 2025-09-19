@@ -23,7 +23,7 @@ export default function Icon({ id, name, type, img }: IconProps) {
     }
 
     const returnImage = (type: IconTypes, img: string | null) => {
-        const domain = getDomainFromUrl("https://www.youtube.com/watch?v=DoIrrlHgsGM");
+        const domain = getDomainFromUrl("https://www.postgresql.org/docs/current/tutorial-start.html");
         switch (type) {
             case "folder":
                 return `https://www.google.com/s2/favicons?domain=${domain}&sz=256`;
