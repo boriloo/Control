@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import Draggable, { DraggableData, DraggableEvent } from 'react-draggable';
-import Icon, { IconTypes } from '../../components/icon';
+import Icon, { IconTypes } from './icon';
 
 
 type IconData = {
@@ -31,7 +31,7 @@ export function DraggableIcon({ icon, onStart, onDrag, onStop }: DraggableIconPr
       bounds={{ left: 0, top: 0 }}
     >
       <div ref={nodeRef} className="absolute cursor-move w-24 h-24 transition-all duration-100">
-        <Icon id={icon.id} name={icon.name} type={icon.type} />
+        <Icon id={icon.id} name={icon.name} type={icon.type}/>
       </div>
     </Draggable>
   );

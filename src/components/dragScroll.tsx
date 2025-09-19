@@ -51,7 +51,6 @@ export const useDraggableScroll = (ref: RefObject<HTMLElement | null>) => {
     element.addEventListener('mouseup', handleMouseLeaveOrUp);
     element.addEventListener('mousemove', handleMouseMove);
 
-    // Função de limpeza: remove os "ouvintes" quando o componente é desmontado
     return () => {
       element.removeEventListener('mousedown', handleMouseDown);
       element.removeEventListener('mouseleave', handleMouseLeaveOrUp);

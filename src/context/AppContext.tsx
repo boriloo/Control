@@ -1,17 +1,17 @@
 import { createContext, useContext, ReactNode } from "react";
-import { useProfileHook } from "../hooks/profileHook";
+import { useAppHook } from "../hooks/appHooks";
 
 type AppContextType = {
-    profile: ReturnType<typeof useProfileHook>;
+    app: ReturnType<typeof useAppHook>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-    const profile = useProfileHook();
+    const app = useAppHook();
 
     const hooks = {
-        profile
+        app,
     };
 
     return <AppContext.Provider value={hooks}>{children}</AppContext.Provider>;

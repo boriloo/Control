@@ -1,9 +1,12 @@
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, X } from "lucide-react"
 import { useState } from "react"
+import { FileDropzone } from "../fileDrop"
+import { useWindowContext } from "../../context/WindowContext";
 
 type fileType = "text" | "link" | "folder" | "image" | "other"
 
 export default function NewFileWindow() {
+    const { newFile } = useWindowContext();
     const [fileType, setFileType] = useState<fileType>('folder')
     const [drop, setDrop] = useState<boolean>(false)
 
@@ -42,17 +45,18 @@ export default function NewFileWindow() {
     }
 
     return (
-        <div className="fixed z-100 w-full h-screen flex justify-center items-center p-4 pb-[50px]">
-            <div className="bg-zinc-800 rounded-md p-4 w-full max-w-[400px] max-h-full flex flex-col gap-4 overflow-y-auto transition-all">
+        <div className={`${newFile.currentStatus === 'open' ? 'bg-black/30' : 'pointer-events-none '} transition-all duration-500 fixed z-100 w-full h-screen flex justify-center items-center p-4 pb-[50px] `}>
+            <div className={`${newFile.currentStatus === 'open' ? 'scale-100' : 'scale-0'} bg-zinc-900 origin-center rounded-md p-4 w-full max-w-[400px] max-h-full flex flex-col gap-4 overflow-y-auto transition-all relative`}>
+                <X onClick={() => { setFileType("folder"); setDrop(false); newFile.closeWindow(); }} size={35} className="absolute top-0 right-0 p-2 rounded-bl-lg cursor-pointer transition-all hover:bg-red-500" />
                 <h1 className="text-[20px]">Criar um novo arquivo</h1>
-                <div className="flex flex-col">
-                    <button onClick={() => setDrop(!drop)} className={`${drop ? 'border-white' : 'border-blue-500'} flex flex-row gap-2 p-4  border-1 rounded-md items-center 
+                <div className="flex flex-col gap-3">
+                    <button onClick={() => setDrop(!drop)} className={`${drop ? 'border-white rounded-t-md' : 'border-blue-500 rounded-md'} flex flex-row gap-2 p-4  border-1  items-center 
                         cursor-pointer transition-all hover:bg-zinc-700`}>
                         <img src={imageReturn()} className="w-7" />
                         <p className="text-lg">{textReturn()}</p>
                         <ChevronDown size={26} className={`${drop ? '' : 'rotate-180 text-blue-500'} transition-all ml-auto`} />
                     </button>
-                    <div className={`${drop ? 'max-h-full' : 'max-h-0 py-0'} p-2 transition-all overflow-hidden flex flex-col bg-zinc-900  gap-2 rounded-b-xl`}>
+                    <div className={`${drop ? 'max-h-full' : 'max-h-0 py-0'} p-2 transition-all overflow-hidden flex flex-col bg-zinc-950 mt-[-10px] gap-2 rounded-b-xl`}>
                         <div onClick={() => { setFileType('folder'); setDrop(true) }}
                             className={`${fileType === 'folder' ? 'border-blue-500 text-blue-500' : 'border-transparent'} 
                             border-1 p-2 flex flex-row gap-4 transition-all hover:bg-zinc-800 rounded-md cursor-pointer select-none`}>
@@ -76,23 +80,33 @@ export default function NewFileWindow() {
                             <img src="/assets/images/image-file.png" className="w-6" />
                             Imagem
                         </div>
-                        <div onClick={() => { setFileType('other'); setDrop(true) }}
+                        {/* <div onClick={() => { setFileType('other'); setDrop(true) }}
                             className={`${fileType === 'other' ? 'border-blue-500 text-blue-500' : 'border-transparent'} 
                             border-1 p-2 flex flex-row gap-4 transition-all hover:bg-zinc-800 rounded-md cursor-pointer select-none`}>
                             <img src="/assets/images/other-file.png" className="w-6" />
                             Outro
-                        </div>
+                        </div> */}
                     </div>
-                    <div className="flex flex-col gap-1 mt-4">
+                    {fileType === 'image' && (<FileDropzone />)}
+                    <div className="flex flex-col gap-1">
                         <p>Nome</p>
                         <div className="flex flex-col">
                             <input type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
                             <div className="w-full h-[1px] bg-zinc-400"></div>
                         </div>
-
                     </div>
-
-
+                    {fileType === 'link' && (<div className="flex flex-col gap-1">
+                        <p>URL</p>
+                        <div className="flex flex-col">
+                            <input type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
+                            <div className="w-full h-[1px] bg-zinc-400"></div>
+                        </div>
+                    </div>)}
+                    <div className="flex flex-row w-full justify-end">
+                        <button className="p-1 px-5 text-lg font-medium border-1 border-whit cursor-pointer transition-all hover:text-blue-500 hover:border-blue-500 hover:bg-zinc-900 rounded-md">
+                            Criar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

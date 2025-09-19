@@ -1,22 +1,24 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import AuthPage from "./pages/auth/page";
 import './App.css'
-import DashboardPage from "./pages/dashboard/page";
-import { AppProvider } from "./context/appContext";
+import { AppProvider } from "./context/AppContext";
+import { WindowProvider } from "./context/WindowContext";
+import { AuthProvider } from "./context/AuthContext";
+import PageRouter from "./components/pageRouter/pageRouter";
+import { RootProvider } from './context/RootContext';
 
 function App() {
   return (
-    <AppProvider>
-      <div className="flex min-h-screen w-full">
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Navigate to='/auth' replace />} />
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-          </Routes>
-        </BrowserRouter>
-      </div >
-    </AppProvider>
+    <RootProvider>
+
+      <WindowProvider>
+        <AppProvider>
+          <AuthProvider>
+            <div className="flex min-h-screen w-full">
+              <PageRouter />
+            </div >
+          </AuthProvider>
+        </AppProvider>
+      </WindowProvider>
+    </RootProvider >
   )
 }
 

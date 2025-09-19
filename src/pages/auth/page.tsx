@@ -3,11 +3,12 @@ import { Eye, EyeOff, Check } from 'lucide-react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { loginUser, registerUser } from "../../services/auth";
+import { registerUser } from "../../services/auth";
 import { useNavigate } from "react-router-dom";
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import { FirebaseError } from "firebase/app";
 import '../../App.css'
+import { useUser } from "../../context/AuthContext";
 
 const loginSchema = z.object({
     email: z.string().email({ message: "Por favor, insira um e-mail válido." }),
@@ -38,13 +39,17 @@ const registerSchema = z.object({
 type FormData = z.infer<typeof loginSchema> | z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
+    const { authLoginUser, authRegisterUser } = useUser();
     const navigate = useNavigate();
     const [rememberMe, setRememberMe] = useState<boolean>(false);
     const [seePass, setSeePass] = useState<boolean>(false);
     const [sent, setSent] = useState<boolean>(false);
     const [loginForm, setLoginForm] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null)
-    const [approved, setApproved] = useState<boolean>(false)
+    const [approved, setApproved] = useState<boolean>(true)
+    useEffect(() => {
+        setTimeout(() => { setApproved(false) }, 100);
+    }, []);
 
     const { register, handleSubmit, formState: { errors }, clearErrors } = useForm<FormData>({
         resolver: zodResolver(loginForm ? loginSchema : registerSchema),
@@ -60,10 +65,9 @@ export default function AuthPage() {
         if (loginForm) {
             try {
                 setError(null);
-                setSent(true)
+                setSent(true);
                 const loginData = data as z.infer<typeof loginSchema>
-                const user = await loginUser({ email: loginData.email, password: loginData.password });
-                console.log("✅ SUCESSO COMPLETO! Usuário logado no Auth e no Firestore:", user);
+                await authLoginUser(loginData.email, loginData.password, rememberMe);
                 setApproved(true)
                 setTimeout(() => {
                     navigate('/dashboard')
@@ -85,16 +89,17 @@ export default function AuthPage() {
             }
         } else {
             try {
-                // setSent()
+                setError(null);
+                setSent(true);
                 const registerData = data as z.infer<typeof registerSchema>
-                console.log("Iniciando processo de registro...");
-                const user = await registerUser({ name: registerData.name, email: registerData.email, password: registerData.password });
-                console.log("✅ SUCESSO COMPLETO! Usuário criado no Auth e no Firestore:", user);
-                alert("Usuário registrado com sucesso em ambos os serviços!");
-
+                await authRegisterUser(registerData.name, registerData.email, registerData.password, rememberMe);
+                setApproved(true)
+                setTimeout(() => {
+                    navigate('/dashboard')
+                }, 1000)
             } catch (error) {
+                setSent(false)
                 console.error("❌ Ocorreu um erro durante o processo de registro:", error);
-                alert("Falha no registro. Verifique o console do navegador para ver o erro detalhado.");
             }
         }
     };
