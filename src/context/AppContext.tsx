@@ -1,20 +1,31 @@
-import { createContext, useContext, ReactNode } from "react";
-import { useAppHook } from "../hooks/appHooks";
+import { createContext, useContext, ReactNode, useCallback } from "react";
+import { useWindowContext } from "./WindowContext";
 
-type AppContextType = {
-    app: ReturnType<typeof useAppHook>;
+interface AppContextType {
+    minimazeAllWindows: () => void;
+    closeAllWindows: () => void;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-    const app = useAppHook();
+    const { file, profile, newFile, config } = useWindowContext()
 
-    const hooks = {
-        app,
-    };
+    const minimazeAllWindows = useCallback(() => {
+        config.minimizeWindow()
+        file.minimizeWindow()
+        profile.minimizeWindow()
+        newFile.closeWindow()
+    }, []);
 
-    return <AppContext.Provider value={hooks}>{children}</AppContext.Provider>;
+    const closeAllWindows = useCallback(() => {
+        file.closeWindow()
+        profile.closeWindow()
+        newFile.closeWindow()
+    }, []);
+
+
+    return <AppContext.Provider value={{ minimazeAllWindows, closeAllWindows }}>{children}</AppContext.Provider>;
 };
 
 export const useAppContext = () => {

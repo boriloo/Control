@@ -92,7 +92,7 @@ export default function AuthPage() {
                 setError(null);
                 setSent(true);
                 const registerData = data as z.infer<typeof registerSchema>
-                await authRegisterUser(registerData.name, registerData.email, registerData.password, rememberMe);
+                await authRegisterUser(registerData.name, registerData.email, registerData.password, rememberMe, 'low', 'low', 'color');
                 setApproved(true)
                 setTimeout(() => {
                     navigate('/dashboard')

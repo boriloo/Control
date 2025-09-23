@@ -2,6 +2,7 @@ import { LogOut, Maximize, Minus, Pencil, X } from "lucide-react"
 import { useState } from "react"
 import { useUser } from "../../context/AuthContext";
 import { useWindowContext } from "../../context/WindowContext";
+import { returnFilterEffects } from "../../types/auth";
 
 export default function ProfileWindow() {
     const { user, authLogoutUser } = useUser();
@@ -18,7 +19,7 @@ export default function ProfileWindow() {
 
     return (
 
-        <div onClick={handleAreaClick} className={`${isFullsceen ? 'pb-[40px]' : ' p-2 pb-[50px]'} ${profile.currentStatus === "open" ? 'bg-black/30' : 'pointer-events-none'} 
+        <div onClick={handleAreaClick} className={`${isFullsceen ? 'pb-[40px]' : ' p-2 pb-[50px]'} ${profile.currentStatus === "open" ? returnFilterEffects() : 'pointer-events-none'} 
         fixed z-100 flex-1 flex justify-center items-center w-full h-screen transition-all duration-500 cursor-pointer`}>
             <div className={`${isFullsceen ? 'max-w-full max-h-full' : 'rounded-lg max-w-[1200px] max-h-[700px]'} ${profile.currentStatus === "open" ? 'scale-100' : 'scale-0 '} 
                 bg-zinc-900 cursor-default origin-bottom relative transition-all duration-300 flex flex-col w-full h-full overflow-y-auto`}>

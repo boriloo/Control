@@ -1,7 +1,7 @@
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile, User, UserProfile } from "firebase/auth"
-import { LoginData, RegisterData } from "../types/auth"
+import { BasicFilter, ColorFilter, LoginData, RegisterData } from "../types/auth"
 import { auth, db } from "../firebase/config";
-import { doc, getDoc, serverTimestamp, setDoc, } from "firebase/firestore";
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc, } from "firebase/firestore";
 
 export const registerUser = async ({ name, email, password }: RegisterData): Promise<UserProfile> => {
   try {
@@ -16,8 +16,9 @@ export const registerUser = async ({ name, email, password }: RegisterData): Pro
     await setDoc(doc(db, "users", newUser.uid), {
       name: name,
       email: newUser.email,
-      opaqueWindows: true,
-      sideBlur: false,
+      filterDark: 'low',
+      filterBlur: 'low',
+      filterColor: 'color',
       createdAt: serverTimestamp()
     });
 
@@ -80,3 +81,33 @@ export const getUserProfile = async (uid: string): Promise<UserProfile> => {
 
   return userProfile;
 };
+
+export const updateUserFilters = async (uid: string, filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter): Promise<UserProfile> => {
+  try {
+    const userDocRef = doc(db, "users", uid);
+    await updateDoc(userDocRef, {
+      filterDark: filterDark,
+      filterBlur: filterBlur,
+      filterColor: filterColor,
+    });
+
+    const updatedDoc = await getDoc(userDocRef);
+
+    if (!updatedDoc.exists()) {
+      throw new Error("O desktop não foi encontrado após a atualização.");
+    }
+
+    const userProfile: UserProfile = {
+      uid: uid,
+      ...updatedDoc.data() as Omit<UserProfile, 'uid'>
+    };
+
+    
+    return userProfile;
+
+  } catch (error) {
+    console.error("Erro ao atualizar o fundo do desktop:", error);
+    throw error;
+  }
+};
+

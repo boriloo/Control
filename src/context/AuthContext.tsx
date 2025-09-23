@@ -4,23 +4,25 @@ import {
     useState,
     ReactNode,
     useEffect,
+    useCallback,
 } from "react";
-import { getUserProfile, loginUser, registerUser } from "../services/auth";
-import { Auth, browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, setPersistence, signOut, User, UserProfile } from "firebase/auth";
+import { getUserProfile, loginUser, registerUser, updateUserFilters } from "../services/auth";
+import { browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, setPersistence, signOut, UserProfile } from "firebase/auth";
 import { auth } from "../firebase/config";
-import { useNavigate } from "react-router-dom";
 import { useAppContext } from "./AppContext";
-import { getDesktopsByOwner } from "../services/desktop";
+import { FullDesktopData, getDesktopsByOwner } from "../services/desktop";
+import { BasicFilter, ColorFilter } from "../types/auth";
 
 
 interface UserContextProps {
     isAuthenticated: boolean;
     user: UserProfile | null;
-    currentDesktop: any;
-    setCurrentDesktop: (desktop: any) => void;
+    currentDesktop: FullDesktopData | null;
+    changeCurrentDesktop: (desktop: FullDesktopData) => void;
     authLoginUser: (email: string, password: string, rememberMe: boolean) => Promise<void>;
-    authRegisterUser: (name: string, email: string, password: string, rememberMe: boolean) => Promise<void>;
+    authRegisterUser: (name: string, email: string, password: string, rememberMe: boolean, filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) => Promise<void>;
     authLogoutUser: () => Promise<void>;
+    authChangeUserFilters: (filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) => Promise<void>;
     isLoading: boolean;
     hasDesktops: boolean;
     setHasDesktops: (value: boolean) => void;
@@ -29,12 +31,16 @@ interface UserContextProps {
 const UserContext = createContext<UserContextProps | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-    const { app } = useAppContext();
+    const { closeAllWindows } = useAppContext();
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [currentDesktop, setCurrentDesktop] = useState<any>(false);
+    const [currentDesktop, setCurrentDesktop] = useState<FullDesktopData | null>(null);
     const [user, setUser] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [hasDesktops, setHasDesktops] = useState<boolean>(false);
+
+    const changeCurrentDesktop = useCallback((desktop: FullDesktopData) => {
+        setCurrentDesktop(desktop)
+    }, [currentDesktop])
 
 
     async function authLoginUser(email: string, password: string, rememberMe: boolean) {
@@ -54,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    async function authRegisterUser(name: string, email: string, password: string, rememberMe: boolean) {
+    async function authRegisterUser(name: string, email: string, password: string, rememberMe: boolean, filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) {
         try {
             const persistenceType = rememberMe
                 ? browserLocalPersistence
@@ -62,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             await setPersistence(auth, persistenceType);
 
-            const user: UserProfile = await registerUser({ name, email, password });
+            const user: UserProfile = await registerUser({ name, email, password, filterDark, filterBlur, filterColor });
             const userProfile = await getUserProfile(user.uid as string)
             setUser(userProfile);
 
@@ -73,16 +79,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     async function authLogoutUser() {
         try {
-            app.closeAllWindows()
+            closeAllWindows()
             signOut(auth)
             setIsAuthenticated(false)
             setUser(null)
             setHasDesktops(false)
             setCurrentDesktop(null)
+            localStorage.setItem('background', '');
         } catch (err) {
             throw err;
         }
     }
+
+    async function authChangeUserFilters(filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) {
+        try {
+            if (!user) return;
+            const updatedUser = await updateUserFilters(
+                user.uid as string,
+                filterDark,
+                filterBlur,
+                filterColor
+            );
+            console.log('FILTROS ATUALIZADOS COM SUCESSO! ', updatedUser)
+            setUser(updatedUser)
+        } catch (err) {
+            throw err;
+        }
+    }
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -95,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 const desktops = await getDesktopsByOwner(user.uid as string);
                 if (desktops.length === 0) return;
                 setHasDesktops(true);
-                setCurrentDesktop(desktops[0])
+                changeCurrentDesktop(desktops[0])
             } catch (err) {
                 alert(err)
             }
@@ -117,8 +141,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 isAuthenticated,
                 user,
                 currentDesktop,
-                setCurrentDesktop,
+                changeCurrentDesktop,
                 authLoginUser,
+                authChangeUserFilters,
                 authRegisterUser,
                 isLoading,
                 authLogoutUser,

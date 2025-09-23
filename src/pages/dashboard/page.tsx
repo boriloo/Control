@@ -9,12 +9,12 @@ import NewFileWindow from "../../components/windows/newFile";
 import FileWindow from "../../components/windows/file";
 import { useUser } from "../../context/AuthContext";
 import TaskBar from "../../components/taskbar";
-import { useAppContext } from "../../context/AppContext";
 import { useWindowContext } from "../../context/WindowContext";
 import { useRootContext } from "../../context/RootContext";
 import ConfigWindow from "../../components/windows/config";
 import PersonalDesktopWindow from "../../components/windows/personalDesktop";
-import { getDesktopsByOwner } from "../../services/desktop";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import SearchBar from "../../components/SearchBar";
 
 type IconData = {
     id: string;
@@ -50,14 +50,14 @@ const findNextAvailablePosition = (icons: IconData[], containerWidth: number): {
 
 export default function DashboardPage() {
     const { root } = useRootContext();
-    const { user, hasDesktops, setHasDesktops, currentDesktop, authLogoutUser } = useUser();
+    const { hasDesktops, setHasDesktops, currentDesktop } = useUser();
     const { newFile } = useWindowContext();
-    console.log(currentDesktop)
     const [start, setStart] = useState<boolean>(false);
+
 
     useEffect(() => {
         if (!hasDesktops) return;
-        setTimeout(() => { setStart(true) }, 100);
+        setTimeout(() => { setStart(true) }, 500);
     }, [hasDesktops]);
 
     const [icons, setIcons] = useState<IconData[]>(initialIcons);
@@ -127,23 +127,6 @@ export default function DashboardPage() {
         checkOverflow();
     };
 
-    const handleCreateIcon = () => {
-        const container = desktopRef.current;
-        if (!container) return;
-        const position = findNextAvailablePosition(icons, container.clientWidth);
-        if (position) {
-            const newIcon: IconData = {
-                id: crypto.randomUUID(),
-                name: 'Nova Pasta',
-                type: 'folder',
-                position: position,
-            };
-            setIcons(prevIcons => [...prevIcons, newIcon]);
-        } else {
-            alert("Não há mais espaço no desktop!");
-        }
-    };
-
     useDraggableScroll(desktopRef);
 
     useEffect(() => {
@@ -163,16 +146,25 @@ export default function DashboardPage() {
 
     return (
         <>
-            <div className="pointer-events-none fixed z-50 flex justify-center items-center w-full min-h-screen">
-                <p className={`${start ? 'opacity-0' : 'opacity-100'} control-text text-[50px] transition-all duration-500`}>Control</p>
+            <div className="pointer-events-none fixed z-[-3] flex justify-center items-center w-full min-h-screen">
+                <DotLottieReact
+                    src="https://lottie.host/e580eaa4-d189-480f-a6ce-f8c788dff90d/MP2FjoJFFE.lottie"
+                    className="w-20 p-0"
+                    loop
+                    autoplay
+                />
             </div>
-            {hasDesktops && (<div className={`${start ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 scale-101 flex min-h-screen w-full fixed 
-                bg-black bg-cover bg-center z-[-1]`}
+            <div className={`${start ? 'opacity-0' : 'opacity-100'} bg-black transtion-all duration-500 pointer-events-none fixed z-50 flex justify-center items-center w-full min-h-screen`}>
+                <p className={`control-text text-[50px]`}>Control</p>
+            </div>
+            {hasDesktops && (<div className={`${start ? 'opacity-100 ' : 'blur-3xl opacity-0'} transition-[opacity,filter] duration-1500 scale-101 flex min-h-screen w-full fixed 
+             bg-cover bg-center z-[-2]`}
+                style={{ backgroundImage: `url(${localStorage.getItem('background')})` }}></div>)}
+            {hasDesktops && (<div className={`${start ? 'opacity-100 ' : 'blur-3xl opacity-0'} transition-[opacity,filter] duration-1500 scale-101 flex min-h-screen w-full fixed 
+             bg-cover bg-center z-[-1]`}
                 style={{ backgroundImage: `url(${currentDesktop.background})` }}></div>)}
-            {/* <div className="fixed top-0 w-full min-h-screen backdrop-blur-[2px] z-10 flex justify-center items-center p-4">
-                <div className="bg-zinc-600 w-[600px] h-[500px]"></div>
 
-            </div> */}
+
             {hasDesktops ? '' : (<PersonalDesktopWindow onFinish={(bool) => setHasDesktops(bool)} />)}
 
             <ConfigWindow />
@@ -189,14 +181,7 @@ export default function DashboardPage() {
                             <p className="text-lg">Criar</p>
                         </button>
                     </div>
-                    <div className="w-full max-w-[400px] relative">
-                        <Search className='absolute left-3 z-10 top-1/2 -translate-y-1/2 text-zinc-200 transition-all duration-300' />
-                        <input
-                            className="w-full h-10 pl-11 pr-4 cursor-pointer transition-all duration-300 outline-none border-1 border-transparent
-                            bg-black/40 backdrop-blur-md hover:bg-black/45 focus:bg-black/55 focus:backdrop-blur-lg focus:border-blue-500 rounded-full"
-                            placeholder="Pesquisar..."
-                        />
-                    </div>
+                    <SearchBar />
                     {hasDesktops && (<div className="flex flex-row items-center justify-between gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
                 border-white hover:text-blue-500 hover:border-blue-500 transition-all w-full max-w-50">
                         <p className="text-lg truncate">{currentDesktop.name} (Pessoal)</p>

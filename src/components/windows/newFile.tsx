@@ -2,6 +2,7 @@ import { ChevronDown, X } from "lucide-react"
 import { useState } from "react"
 import { FileDropzone } from "../fileDrop"
 import { useWindowContext } from "../../context/WindowContext";
+import { returnFilterEffects } from "../../types/auth";
 
 type fileType = "text" | "link" | "folder" | "image" | "other"
 
@@ -9,6 +10,11 @@ export default function NewFileWindow() {
     const { newFile } = useWindowContext();
     const [fileType, setFileType] = useState<fileType>('folder')
     const [drop, setDrop] = useState<boolean>(false)
+
+    const handleAreaClick = (e: React.MouseEvent<HTMLElement>) => {
+        if (e.target != e.currentTarget) return;
+        newFile.closeWindow();
+    }
 
     function imageReturn() {
         switch (fileType) {
@@ -45,8 +51,9 @@ export default function NewFileWindow() {
     }
 
     return (
-        <div className={`${newFile.currentStatus === 'open' ? 'bg-black/30' : 'pointer-events-none '} transition-all duration-500 fixed z-100 w-full h-screen flex justify-center items-center p-4 pb-[50px] `}>
-            <div className={`${newFile.currentStatus === 'open' ? 'scale-100' : 'scale-0'} bg-zinc-900 origin-center rounded-md p-4 w-full max-w-[400px] max-h-full flex flex-col gap-4 overflow-y-auto transition-all relative`}>
+        <div onClick={handleAreaClick} className={`${newFile.currentStatus === 'open' ? returnFilterEffects() : 'pointer-events-none '} 
+        transition-all duration-500 fixed z-100 w-full h-screen flex justify-center items-center p-4 pb-[50px] cursor-pointer`}>
+            <div className={`${newFile.currentStatus === 'open' ? 'scale-100' : 'scale-0'} cursor-default bg-zinc-900 origin-center rounded-md p-4 w-full max-w-[400px] max-h-full flex flex-col gap-4 overflow-y-auto transition-all relative`}>
                 <X onClick={() => { setFileType("folder"); setDrop(false); newFile.closeWindow(); }} size={35} className="absolute top-0 right-0 p-2 rounded-bl-lg cursor-pointer transition-all hover:bg-red-500" />
                 <h1 className="text-[20px]">Criar um novo arquivo</h1>
                 <div className="flex flex-col gap-3">

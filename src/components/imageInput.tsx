@@ -32,6 +32,7 @@ export function ClickableImageInput({ onFileSelected, currentImageUrl }: Clickab
 
     useEffect(() => {
         return () => {
+            console.log('foi')
             if (preview && !currentImageUrl) {
                 URL.revokeObjectURL(preview);
             }
@@ -46,17 +47,17 @@ export function ClickableImageInput({ onFileSelected, currentImageUrl }: Clickab
             <input {...getInputProps()} />
             {preview ? (
                 <>
-                    <div className='w-full h-full bg-cover bg-center' style={{ backgroundImage: `url(${preview})` }}>
-
-                    </div>
-
+                    <div
+                        className="w-full h-[168px] bg-cover bg-center"
+                        style={{ backgroundImage: `url(${preview})` }}
+                    />
                     <div className="absolute top-0 left-0 z-10 w-full h-full flex justify-center items-center font-medium text-lg transition-all 
-                    opacity-0 bg-black/50 group-hover:opacity-100 backdrop-blur-sm object-cover">
+      opacity-0 bg-black/50 group-hover:opacity-100 backdrop-blur-sm">
                         Escolher outra imagem
                     </div>
                 </>
             ) : (
-                <div className="flex justify-center items-center  gap-2">
+                <div className="flex justify-center items-center gap-2">
                     Selecionar Imagem
                     <Upload className="w-6 h-6 text-zinc-400" />
                 </div>
