@@ -1,0 +1,16 @@
+{
+  "dashboard": {
+    "create": "Create",
+    "search": "Search"
+  },
+  "listdt": {
+    "title": "Your Desktops",
+    "current": "Current",
+    "others": "Others",
+    "member": "member",
+    "members": "members",
+    "lost_1": "It looks like you don’t have other desktops...",
+    "lost_2": "How about creating a new one?",
+    "create": "Create New Desktop"
+  }
+}

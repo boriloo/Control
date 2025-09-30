@@ -30,7 +30,6 @@ export const createDesktop = async (data: DesktopData): Promise<FullDesktopData>
             ...(desktopDoc.data() as DesktopData)
         };
 
-        console.log("Desktop criado com sucesso:", desktop);
         return desktop;
 
     } catch (error) {
@@ -51,7 +50,6 @@ export const getDesktopsByOwner = async (ownerId: string): Promise<FullDesktopDa
             ...doc.data()
         })) as FullDesktopData[];
 
-        console.log(`Encontrados ${desktops.length} desktops para o utilizador ${ownerId}`);
         return desktops;
 
     } catch (error) {
@@ -60,19 +58,35 @@ export const getDesktopsByOwner = async (ownerId: string): Promise<FullDesktopDa
     }
 };
 
+export const getDesktopById = async (desktopId: string): Promise<FullDesktopData> => {
+    try {
+        const docRef = doc(db, "desktops", desktopId);
+        const docSnap = await getDoc(docRef);
+
+        if (!docSnap.exists()) {
+            throw new Error("Desktop não encontrado");
+        }
+
+        const desktop: FullDesktopData = {
+            id: docSnap.id,
+            ...(docSnap.data() as DesktopData),
+        };
+
+        return desktop;
+    } catch (error) {
+        console.error("Erro ao buscar desktop:", error);
+        throw error;
+    }
+};
 
 export const getDesktopsByMember = async (memberId: string): Promise<FullDesktopData[]> => {
     try {
         const q = query(collection(db, "desktops"), where("members", "array-contains", memberId));
-
         const querySnapshot = await getDocs(q);
-
         const desktops: FullDesktopData[] = querySnapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         })) as FullDesktopData[];
-
-        console.log(`Encontrados ${desktops.length} desktops para o utilizador ${memberId}`);
         return desktops;
 
     } catch (error) {

@@ -1,25 +1,7 @@
-import { useCallback, useState } from "react";
-import { useRootContext } from "../../context/RootContext";
-
-type Status = "open" | "minimazed" | "closed"
+import { useWindowStatus } from "../windowHook";
 
 export const useFileHook = () => {
-    const { root } = useRootContext()
-    const [currentStatus, setCurrentStatus] = useState<Status>('closed')
-
-    const openWindow = useCallback(() => {
-        if (!root.canOpenWindow) return;
-        setCurrentStatus("open")
-    }, []);
-
-    const minimizeWindow = useCallback(() => {
-        setCurrentStatus("minimazed")
-    }, []);
-
-    const closeWindow = useCallback(() => {
-        setCurrentStatus("closed")
-    }, []);
-
+    const { currentStatus, openWindow, minimizeWindow, closeWindow } = useWindowStatus();
 
     return {
         currentStatus,

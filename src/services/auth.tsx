@@ -7,7 +7,6 @@ export const registerUser = async ({ name, email, password }: RegisterData): Pro
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const newUser = userCredential.user;
-    console.log('new', newUser)
 
     await updateProfile(newUser, {
       displayName: name,
@@ -19,6 +18,7 @@ export const registerUser = async ({ name, email, password }: RegisterData): Pro
       filterDark: 'low',
       filterBlur: 'low',
       filterColor: 'color',
+      profileImage: null,
       createdAt: serverTimestamp()
     });
 
@@ -102,11 +102,36 @@ export const updateUserFilters = async (uid: string, filterDark: BasicFilter, fi
       ...updatedDoc.data() as Omit<UserProfile, 'uid'>
     };
 
-    
+
     return userProfile;
 
   } catch (error) {
     console.error("Erro ao atualizar o fundo do desktop:", error);
+    throw error;
+  }
+};
+
+export const updateUserProfileImage = async (uid: string, imageURL: string): Promise<UserProfile> => {
+  try {
+    const userRef = doc(db, "users", uid);
+    await updateDoc(userRef, {
+      profileImage: imageURL
+    });
+    const updatedDoc = await getDoc(userRef);
+
+    if (!updatedDoc.exists()) {
+      throw new Error("O usuario não foi encontrado após a atualização.");
+    }
+
+    const updatedUserData: UserProfile = {
+      uid: updatedDoc.id,
+      ...updatedDoc.data() as UserProfile
+    };
+
+    return updatedUserData;
+
+  } catch (error) {
+    console.error("Erro ao atualizar imagem de perfil", error);
     throw error;
   }
 };

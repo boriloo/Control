@@ -6,11 +6,11 @@ import {
     useEffect,
     useCallback,
 } from "react";
-import { getUserProfile, loginUser, registerUser, updateUserFilters } from "../services/auth";
+import { getUserProfile, loginUser, registerUser, updateUserFilters, updateUserProfileImage } from "../services/auth";
 import { browserLocalPersistence, browserSessionPersistence, onAuthStateChanged, setPersistence, signOut, UserProfile } from "firebase/auth";
 import { auth } from "../firebase/config";
 import { useAppContext } from "./AppContext";
-import { FullDesktopData, getDesktopsByOwner } from "../services/desktop";
+import { FullDesktopData, getDesktopById, getDesktopsByOwner } from "../services/desktop";
 import { BasicFilter, ColorFilter } from "../types/auth";
 
 
@@ -22,6 +22,7 @@ interface UserContextProps {
     authLoginUser: (email: string, password: string, rememberMe: boolean) => Promise<void>;
     authRegisterUser: (name: string, email: string, password: string, rememberMe: boolean, filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) => Promise<void>;
     authLogoutUser: () => Promise<void>;
+    authChangeUserAvatar: (imageURL: string) => void;
     authChangeUserFilters: (filterDark: BasicFilter, filterBlur: BasicFilter, filterColor: ColorFilter) => Promise<void>;
     isLoading: boolean;
     hasDesktops: boolean;
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const changeCurrentDesktop = useCallback((desktop: FullDesktopData) => {
         setCurrentDesktop(desktop)
-    }, [currentDesktop])
+    }, [])
 
 
     async function authLoginUser(email: string, password: string, rememberMe: boolean) {
@@ -85,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser(null)
             setHasDesktops(false)
             setCurrentDesktop(null)
-            localStorage.setItem('background', '');
+            localStorage.clear();
         } catch (err) {
             throw err;
         }
@@ -107,28 +108,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    async function authChangeUserAvatar(imageURl: string) {
+        try {
+            if (!user) return;
+            const updatedUser = await updateUserProfileImage(
+                user.uid as string,
+                imageURl
+            );
+            setUser(updatedUser)
+        } catch (err) {
+            throw err;
+        }
+    }
+
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                console.log('SEM USER')
+                console.log("não foi possível encontrar usuário autenticado");
+                setIsLoading(false);
                 return;
-            };
+            }
             setIsAuthenticated(true);
             try {
-                const desktops = await getDesktopsByOwner(user.uid as string);
-                if (desktops.length === 0) return;
-                setHasDesktops(true);
-                changeCurrentDesktop(desktops[0])
-            } catch (err) {
-                alert(err)
-            }
-            const userProfile = await getUserProfile(user.uid)
-            if (!userProfile) return;
-            setUser(userProfile);
-        });
-        setIsLoading(false)
+                const item = localStorage.getItem("last-desktop");
+                if (item === null) {
+                    const desktops = await getDesktopsByOwner(user.uid as string);
+                    if (desktops.length > 0) {
+                        setHasDesktops(true);
+                        changeCurrentDesktop(desktops[0]);
+                    }
+                } else {
+                    setHasDesktops(true);
+                    const lastDesktop = await getDesktopById(item);
+                    changeCurrentDesktop(lastDesktop);
+                }
 
+                const userProfile = await getUserProfile(user.uid);
+                if (userProfile) setUser(userProfile);
+            } catch (err) {
+                alert(err);
+            } finally {
+                setIsLoading(false);
+            }
+        });
         return () => unsubscribe();
     }, []);
 
@@ -138,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return (
         <UserContext.Provider
             value={{
+                authChangeUserAvatar,
                 isAuthenticated,
                 user,
                 currentDesktop,

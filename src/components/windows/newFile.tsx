@@ -3,18 +3,72 @@ import { useState } from "react"
 import { FileDropzone } from "../fileDrop"
 import { useWindowContext } from "../../context/WindowContext";
 import { returnFilterEffects } from "../../types/auth";
-
-type fileType = "text" | "link" | "folder" | "image" | "other"
+import { FileType } from "../../types/file";
+import { createFile } from "../../services/file";
+import { useUser } from "../../context/AuthContext";
 
 export default function NewFileWindow() {
+    const { user, currentDesktop } = useUser();
     const { newFile } = useWindowContext();
-    const [fileType, setFileType] = useState<fileType>('folder')
+    const [fileType, setFileType] = useState<FileType>('folder')
     const [drop, setDrop] = useState<boolean>(false)
+    const [name, setName] = useState<string | null>(null)
 
     const handleAreaClick = (e: React.MouseEvent<HTMLElement>) => {
         if (e.target != e.currentTarget) return;
         newFile.closeWindow();
     }
+
+    const handleCreateFile = async () => {
+        if (!user || !currentDesktop) {
+            alert("Erro: Não foi possível identificar o utilizador ou o desktop.");
+            return;
+        }
+
+        const basePayload = {
+            desktopId: currentDesktop.id,
+            parentId: null,
+            ownerId: user.uid,
+            usersId: [user.uid],
+            name: name,
+            type: fileType,
+            position: { x: 500, y: 500 },
+            path: [{ id: null, name: 'Início' }],
+        };
+
+        let finalPayload: any = { ...basePayload };
+
+        switch (fileType) {
+            case 'text':
+                const content = "";
+                finalPayload.content = content;
+                finalPayload.sizeInBytes = new Blob([content]).size;
+                break;
+
+            case 'link':
+                finalPayload.url = "https://";
+                finalPayload.sizeInBytes = 0;
+                break;
+
+            case 'image':
+
+                break;
+
+            case 'folder':
+                finalPayload.sizeInBytes = 0;
+                break;
+
+            default:
+                console.error("Tipo de ficheiro desconhecido:", fileType);
+                return;
+        }
+        try {
+            await createFile(finalPayload);
+            console.log(`Ficheiro do tipo '${fileType}' criado com sucesso!`);
+        } catch (error) {
+            console.error("Falha ao criar o ficheiro:", error);
+        }
+    };
 
     function imageReturn() {
         switch (fileType) {
@@ -26,8 +80,8 @@ export default function NewFileWindow() {
                 return '/assets/images/link.png'
             case ('image'):
                 return '/assets/images/image-file.png'
-            case ('other'):
-                return '/assets/images/other-file.png'
+            // case ('other'):
+            //     return '/assets/images/other-file.png'
             default:
                 break
         }
@@ -43,8 +97,8 @@ export default function NewFileWindow() {
                 return 'Link'
             case ('image'):
                 return 'Imagem'
-            case ('other'):
-                return 'Outro'
+            // case ('other'):
+            //     return 'Outro'
             default:
                 break
         }
@@ -98,7 +152,7 @@ export default function NewFileWindow() {
                     <div className="flex flex-col gap-1">
                         <p>Nome</p>
                         <div className="flex flex-col">
-                            <input type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
+                            <input onChange={(e) => setName(e.target.value)} type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
                             <div className="w-full h-[1px] bg-zinc-400"></div>
                         </div>
                     </div>
@@ -110,7 +164,7 @@ export default function NewFileWindow() {
                         </div>
                     </div>)}
                     <div className="flex flex-row w-full justify-end">
-                        <button className="p-1 px-5 text-lg font-medium border-1 border-whit cursor-pointer transition-all hover:text-blue-500 hover:border-blue-500 hover:bg-zinc-900 rounded-md">
+                        <button onClick={handleCreateFile} className="p-1 px-5 text-lg font-medium border-1 border-whit cursor-pointer transition-all hover:text-blue-500 hover:border-blue-500 hover:bg-zinc-900 rounded-md">
                             Criar
                         </button>
                     </div>

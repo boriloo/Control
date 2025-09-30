@@ -1,6 +1,6 @@
 import { useWindowStatus } from "../windowHook";
 
-export const useProfileHook = () => {
+export const useListDesktopHook = () => {
     const { currentStatus, openWindow, minimizeWindow, closeWindow } = useWindowStatus();
 
     return {

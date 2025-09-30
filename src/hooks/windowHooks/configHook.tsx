@@ -1,29 +1,14 @@
-import { useCallback, useState } from "react";
-
-type Status = "open" | "minimized" | "closed"
+import { useState } from "react";
+import { tabs } from "../../components/windows/config";
+import { useWindowStatus } from "../windowHook";
 
 export const useConfigHook = () => {
-    const [currentStatus, setCurrentStatus] = useState<Status>('closed');
-
-    const openWindow = useCallback(() => {
-        setCurrentStatus("minimized");
-        setTimeout(() => {
-            setCurrentStatus("open");
-        }, 10);
-    }, []);
-
-    const minimizeWindow = useCallback(() => {
-        setCurrentStatus("minimized");
-    }, []);
-
-    const closeWindow = useCallback(() => {
-        setCurrentStatus("minimized");
-        setTimeout(() => {
-            setCurrentStatus(prev => prev === "minimized" ? "closed" : prev);
-        }, 400);
-    }, []);
+    const { currentStatus, openWindow, minimizeWindow, closeWindow } = useWindowStatus();
+    const [currentTab, setCurrentTab] = useState<tabs>('account')
 
     return {
+        currentTab,
+        setCurrentTab,
         currentStatus,
         openWindow,
         minimizeWindow,

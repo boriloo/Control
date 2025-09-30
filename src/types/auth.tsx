@@ -48,7 +48,5 @@ export const returnFilterEffects = () => {
       break;
   }
 
-  console.log('classes: ', classes)
-
   return classes.trim();
 };

@@ -1,6 +1,6 @@
 import { useWindowStatus } from "../windowHook";
 
-export const useNewFileHook = () => {
+export const useNewDesktopHook = () => {
     const { currentStatus, openWindow, closeWindow } = useWindowStatus();
 
     return {

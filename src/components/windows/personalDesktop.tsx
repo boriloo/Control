@@ -44,7 +44,7 @@ export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
             const updatedDesktop = await updateDesktopBackground(newDesktop.id, downloadURL)
 
             localStorage.setItem('background', localUrl);
-            
+
             changeCurrentDesktop(updatedDesktop)
             setPercentage(prev => (prev + 18.66))
             setTimeout(() => {
@@ -97,9 +97,6 @@ export default function PersonalDesktopWindow({ onFinish }: PersonalProps) {
                             setImageSelected(file)
                             console.log(imageSelected)
                         }} />
-                        {!imageSelected && (
-                            <p>(Caso não escolhida, será a padrão)</p>
-                        )}
                     </div>
 
                     <button onClick={handleSubmit} disabled={!imageSelected || !desktopName} className={`${!imageSelected || !desktopName ? 'pointer-events-none saturate-0 opacity-40' : ''}

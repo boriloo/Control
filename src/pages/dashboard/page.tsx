@@ -15,6 +15,10 @@ import ConfigWindow from "../../components/windows/config";
 import PersonalDesktopWindow from "../../components/windows/personalDesktop";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import SearchBar from "../../components/SearchBar";
+import ListDesktopsWindow from "../../components/windows/listDesktops";
+import NewDesktopWindow from "../../components/windows/newDesktop";
+import { useTranslation } from "react-i18next";
+import { FullFileData, getFilesByDesktop } from "../../services/file";
 
 type IconData = {
     id: string;
@@ -49,16 +53,34 @@ const findNextAvailablePosition = (icons: IconData[], containerWidth: number): {
 };
 
 export default function DashboardPage() {
+    const { t } = useTranslation();
     const { root } = useRootContext();
-    const { hasDesktops, setHasDesktops, currentDesktop } = useUser();
-    const { newFile } = useWindowContext();
+    const { user, hasDesktops, setHasDesktops, currentDesktop } = useUser();
+    const { newFile, listdt } = useWindowContext();
     const [start, setStart] = useState<boolean>(false);
-
+    const [desktopFiles, setDesktopFiles] = useState<FullFileData[]>([])
 
     useEffect(() => {
         if (!hasDesktops) return;
         setTimeout(() => { setStart(true) }, 500);
     }, [hasDesktops]);
+
+    useEffect(() => {
+        if (!user) {
+            console.log('USER NEM FOI ENCONTRADO')
+            return;
+        };
+        const fetchDesktops = async () => {
+            try {
+                const res = await getFilesByDesktop(user?.uid as string, currentDesktop?.id as string);
+                setDesktopFiles(res)
+                console.log('ARQUIVOS ACHADOS: ', res)
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        fetchDesktops();
+    }, [currentDesktop?.id]);
 
     const [icons, setIcons] = useState<IconData[]>(initialIcons);
     const desktopRef = useRef<HTMLDivElement>(null);
@@ -162,15 +184,15 @@ export default function DashboardPage() {
                 style={{ backgroundImage: `url(${localStorage.getItem('background')})` }}></div>)}
             {hasDesktops && (<div className={`${start ? 'opacity-100 ' : 'blur-3xl opacity-0'} transition-[opacity,filter] duration-1500 scale-101 flex min-h-screen w-full fixed 
              bg-cover bg-center z-[-1]`}
-                style={{ backgroundImage: `url(${currentDesktop.background})` }}></div>)}
-
-
+                style={{ backgroundImage: `url(${currentDesktop?.background})` }}></div>)}
             {hasDesktops ? '' : (<PersonalDesktopWindow onFinish={(bool) => setHasDesktops(bool)} />)}
 
             <ConfigWindow />
             <NewFileWindow />
             <ProfileWindow />
             <FileWindow />
+            <ListDesktopsWindow />
+            <NewDesktopWindow />
             <div className={`${start ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 flex flex-col w-full h-screen overflow-hidden text-white`}>
                 <div className="flex flex-row flex-wrap justify-between items-center w-full gap-3 p-4">
                     <div className=" w-full max-w-50">
@@ -178,15 +200,15 @@ export default function DashboardPage() {
                             className="flex flex-row items-center justify-start gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
                 border-transparent hover:text-blue-500 hover:border-blue-500 transition-all">
                             <CirclePlus />
-                            <p className="text-lg">Criar</p>
+                            <p className="text-lg">{t("dashboard.create")}</p>
                         </button>
                     </div>
                     <SearchBar />
-                    {hasDesktops && (<div className="flex flex-row items-center justify-between gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
-                border-white hover:text-blue-500 hover:border-blue-500 transition-all w-full max-w-50">
-                        <p className="text-lg truncate">{currentDesktop.name} (Pessoal)</p>
+                    <div onClick={listdt.openWindow} className="flex flex-row items-center justify-between gap-2 p-1 px-3 cursor-pointer rounded-md bg-black/40 backdrop-blur-md hover:bg-black/65 border-[1px] 
+                border-white hover:text-blue-500 hover:border-blue-500 transition-all w-full max-w-50 select-none">
+                        <p className="text-lg truncate">{currentDesktop?.name} ({currentDesktop?.type})</p>
                         <GripVertical />
-                    </div>)}
+                    </div>
                 </div>
 
                 <ArrowLeftToLine onClick={
@@ -220,9 +242,9 @@ export default function DashboardPage() {
 
                 <div
                     ref={desktopRef} className="desktop-area flex-1 w-full relative mb-10 p-4 overflow-scroll">
-                    {icons.map((icon) => (
+                    {desktopFiles.map((icon) => (
                         <DraggableIcon
-                            key={icon.id}
+                            key={2}
                             icon={icon}
                             onStart={handleDragStart}
                             onDrag={handleDrag}
