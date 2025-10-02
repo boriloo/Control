@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDoc, getDocs, onSnapshot, query, serverTimestamp, Unsubscribe, updateDoc, where } from "firebase/firestore";
 import { FileData } from "../types/file";
 import { db } from "../firebase/config";
 
@@ -75,6 +75,31 @@ export const getFilesByDesktop = async (userId: string, desktopId: string): Prom
     }
 };
 
+export const listenToFilesByDesktop = (
+    userId: string,
+    desktopId: string,
+    callback: (files: FullFileData[]) => void
+): Unsubscribe => {
+
+    const q = query(
+        collection(db, "files"),
+        where("desktopId", "==", desktopId),
+        where("parentId", "==", null),
+        where("usersId", "array-contains", userId)
+    );
+
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const files = querySnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        })) as FullFileData[];
+
+        callback(files);
+    });
+
+    return unsubscribe;
+};
+
 export const updateFilePosition = async (fileId: string, position: { x: number, y: number }): Promise<FullFileData> => {
     try {
         const fileRef = doc(db, "files", fileId);
@@ -99,3 +124,4 @@ export const updateFilePosition = async (fileId: string, position: { x: number, 
         throw err;
     }
 }
+

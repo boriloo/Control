@@ -13,6 +13,24 @@ export default function NewFileWindow() {
     const [fileType, setFileType] = useState<FileType>('folder')
     const [drop, setDrop] = useState<boolean>(false)
     const [name, setName] = useState<string | null>(null)
+    const [url, setUrl] = useState<string | null>(null)
+
+    const normalizeUrl = (inputUrl: string | null): string | null => {
+        if (!inputUrl) return null;
+
+        let normalized = inputUrl.trim();
+
+        if (!normalized.match(/ ^[a-zA-Z]+: \/ \/ /)) {
+            normalized = 'https://' + normalized;
+        }
+
+        try {
+            const urlObject = new URL(normalized);
+            return urlObject.toString();
+        } catch (e) {
+            return inputUrl;
+        }
+    };
 
     const handleAreaClick = (e: React.MouseEvent<HTMLElement>) => {
         if (e.target != e.currentTarget) return;
@@ -46,7 +64,14 @@ export default function NewFileWindow() {
                 break;
 
             case 'link':
-                finalPayload.url = "https://";
+                const finalUrl = normalizeUrl(url);
+
+                if (!finalUrl) {
+                    alert("Por favor, insira uma URL válida.");
+                    return;
+                }
+
+                finalPayload.url = finalUrl;
                 finalPayload.sizeInBytes = 0;
                 break;
 
@@ -159,7 +184,7 @@ export default function NewFileWindow() {
                     {fileType === 'link' && (<div className="flex flex-col gap-1">
                         <p>URL</p>
                         <div className="flex flex-col">
-                            <input type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
+                            <input onChange={(e) => setUrl(e.target.value)} type="text" className="border-none outline-[1.5px] p-1 px-2 outline-transparent transition-all cursor-pointer hover:bg-zinc-700 rounded-sm focus:outline-blue-500 focus:cursor-text" />
                             <div className="w-full h-[1px] bg-zinc-400"></div>
                         </div>
                     </div>)}

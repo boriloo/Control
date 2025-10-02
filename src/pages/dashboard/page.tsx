@@ -18,24 +18,11 @@ import SearchBar from "../../components/SearchBar";
 import ListDesktopsWindow from "../../components/windows/listDesktops";
 import NewDesktopWindow from "../../components/windows/newDesktop";
 import { useTranslation } from "react-i18next";
-import { FullFileData, getFilesByDesktop } from "../../services/file";
+import { FullFileData, getFilesByDesktop, listenToFilesByDesktop, updateFilePosition } from "../../services/file";
+import OpenLinkWindow from "../../components/windows/openLink";
 
-type IconData = {
-    id: string;
-    name: string;
-    type: IconTypes;
-    position: { x: number; y: number };
-};
 
-const initialIcons: IconData[] = [
-    { id: 'folder-1', name: 'Pasta', type: 'folder', position: { x: 100, y: 0 } },
-    { id: 'link-1', name: 'Texto', type: 'text', position: { x: 0, y: 100 } },
-    { id: 'text-1', name: 'Link', type: 'link', position: { x: 0, y: 0 } },
-    { id: 'chat-1', name: 'Chat', type: 'chat', position: { x: 100, y: 100 } },
-    { id: 'calendar-1', name: 'Calendário', type: 'calendar', position: { x: 0, y: 200 } },
-];
-
-const findNextAvailablePosition = (icons: IconData[], containerWidth: number): { x: number; y: number } | null => {
+const findNextAvailablePosition = (icons: FullFileData[], containerWidth: number): { x: number; y: number } | null => {
     const GRID_SIZE = 100;
     const occupiedPositions = new Set(
         icons.map(icon => `${icon.position.x},${icon.position.y}`)
@@ -56,7 +43,7 @@ export default function DashboardPage() {
     const { t } = useTranslation();
     const { root } = useRootContext();
     const { user, hasDesktops, setHasDesktops, currentDesktop } = useUser();
-    const { newFile, listdt } = useWindowContext();
+    const { newFile, listdt, openLink } = useWindowContext();
     const [start, setStart] = useState<boolean>(false);
     const [desktopFiles, setDesktopFiles] = useState<FullFileData[]>([])
 
@@ -66,23 +53,23 @@ export default function DashboardPage() {
     }, [hasDesktops]);
 
     useEffect(() => {
-        if (!user) {
-            console.log('USER NEM FOI ENCONTRADO')
-            return;
-        };
-        const fetchDesktops = async () => {
-            try {
-                const res = await getFilesByDesktop(user?.uid as string, currentDesktop?.id as string);
-                setDesktopFiles(res)
-                console.log('ARQUIVOS ACHADOS: ', res)
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        fetchDesktops();
-    }, [currentDesktop?.id]);
+        if (!user || !currentDesktop?.id) return;
 
-    const [icons, setIcons] = useState<IconData[]>(initialIcons);
+        // Inicia a escuta e recebe a função de limpeza
+        const unsubscribe = listenToFilesByDesktop(
+            user.uid as string,
+            currentDesktop.id,
+            (newFiles) => {
+                setDesktopFiles(newFiles); // Atualiza o estado quando há mudança no DB
+                console.log('ARQUIVOS ATUALIZADOS EM TEMPO REAL: ', newFiles);
+            }
+        );
+
+        // Retorna a função de limpeza (unsubscribe) para quando o componente for desmontado
+        return () => unsubscribe();
+
+    }, [currentDesktop?.id, user?.uid]); // Dependências do efeito
+
     const desktopRef = useRef<HTMLDivElement>(null);
     const [contentToRight, setContentToRight] = useState<boolean>(false)
     const [contentToBottom, setContentToBottom] = useState<boolean>(false)
@@ -106,11 +93,11 @@ export default function DashboardPage() {
         setContentToBottom(hasVerticalOverflow && !isAtVerticalEnd);
     }, []);
 
-    const initialDragState = useRef<IconData[] | null>(null);
+    const initialDragState = useRef<FullFileData[] | null>(null);
 
     const handleDragStart = () => {
         root.setCanOpenWindow(true);
-        initialDragState.current = icons;
+        initialDragState.current = desktopFiles;
     };
 
     const handleDrag = (e: DraggableEvent, data: DraggableData, draggedIconId: string) => {
@@ -130,13 +117,13 @@ export default function DashboardPage() {
         );
 
         if (targetIcon) {
-            setIcons(originalIcons.map(icon => {
+            setDesktopFiles(originalIcons.map(icon => {
                 if (icon.id === draggedIconId) return { ...icon, position: targetIcon.position };
                 if (icon.id === targetIcon.id) return { ...icon, position: draggedIconOriginal.position };
                 return icon;
             }));
         } else {
-            setIcons(originalIcons.map(icon =>
+            setDesktopFiles(originalIcons.map(icon =>
                 icon.id === draggedIconId ? { ...icon, position: currentPosition } : icon
             ));
         }
@@ -147,6 +134,13 @@ export default function DashboardPage() {
     const handleDragStop = () => {
         initialDragState.current = null;
         checkOverflow();
+        desktopFiles.forEach(async (file) => {
+            try {
+                await updateFilePosition(file.id, file.position);
+            } catch (error) {
+                console.error(`Erro ao atualizar a posição do arquivo ${file.id}:`, error);
+            }
+        });
     };
 
     useDraggableScroll(desktopRef);
@@ -163,7 +157,7 @@ export default function DashboardPage() {
             desktopEl.removeEventListener('scroll', checkOverflow);
             window.removeEventListener('resize', checkOverflow);
         };
-    }, [icons, checkOverflow]);
+    }, [desktopFiles, checkOverflow]);
 
 
     return (
@@ -193,6 +187,7 @@ export default function DashboardPage() {
             <FileWindow />
             <ListDesktopsWindow />
             <NewDesktopWindow />
+            <OpenLinkWindow url={openLink.url as string} />
             <div className={`${start ? 'opacity-100' : 'opacity-0'} transition-opacity duration-1000 flex flex-col w-full h-screen overflow-hidden text-white`}>
                 <div className="flex flex-row flex-wrap justify-between items-center w-full gap-3 p-4">
                     <div className=" w-full max-w-50">
